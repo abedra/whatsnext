@@ -4,6 +4,7 @@ import (
         "fmt"
         "io/ioutil"
         "flag"
+        "os"
         "github.com/google/go-github/github"
         "golang.org/x/oauth2"
         "gopkg.in/yaml.v2"
@@ -22,24 +23,33 @@ func printIssue(issue github.Issue) {
         }
 }
 
-func main() {
-        configPtr := flag.String("config", "config.yml", "Path to configuration yaml file")
-        flag.Parse()
-
+func ReadConfig(file string) Config {
         var config Config
-        raw, err := ioutil.ReadFile(*configPtr)
+
+        raw, err := ioutil.ReadFile(file)
         if err != nil {
                 fmt.Println(err)
+                os.Exit(1)
         }
 
         err = yaml.Unmarshal(raw, &config)
         if err != nil {
                 fmt.Println(err)
+                os.Exit(1)
         }
 
+        return config
+}
+
+func BuildClient(config Config) *github.Client {
         ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: config.Token},)
         tc := oauth2.NewClient(oauth2.NoContext, ts)
         client := github.NewClient(tc)
+
+        return client
+}
+
+func ProcessRepositories(config Config, client *github.Client) {
         for _, user := range config.Users {
                 repos, _, err := client.Repositories.List(user, nil)
 
@@ -62,4 +72,13 @@ func main() {
                         }
                 }
         }
+}
+
+func main() {
+        configPtr := flag.String("config", "config.yml", "Path to configuration yaml file")
+        flag.Parse()
+
+        config := ReadConfig(*configPtr)
+        client := BuildClient(config)
+        ProcessRepositories(config, client)
 }
