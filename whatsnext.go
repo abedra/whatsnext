@@ -15,7 +15,7 @@ type Config struct {
         Token  string
 }
 
-func printIssue(issue github.Issue) {
+func printIssue(issue *github.Issue) {
         if *issue.Number < 10 {
                 fmt.Printf("    [%d]  - %s\n", *issue.Number, *issue.Title)
         } else {
