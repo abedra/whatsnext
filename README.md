@@ -18,7 +18,15 @@ dependencies:
 * `golang.org/x/oauth2`
 * `gopkg.in/yaml.v2`
 
-If you have a working go environment you can install whatsnext using the following command:
+If you have the glide dependency manager installed you can run the
+following to install the necessary dependencies.
+
+```
+glide install
+```
+
+If you have a working go environment you can install whatsnext using
+the following command:
 
 ```
 $ go get github.com/abedra/whatsnext

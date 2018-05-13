@@ -1,0 +1,9 @@
+package: .
+import:
+- package: github.com/google/go-github
+  version: ^15.0.0
+  subpackages:
+  - github
+- package: golang.org/x/oauth2
+- package: gopkg.in/yaml.v2
+  version: ^2.2.1
