@@ -54,14 +54,17 @@ func BuildClient(config Config) *github.Client {
 func ProcessRepositories(config Config, client *github.Client) {
 	ctx := context.Background()
 	for _, user := range config.Users {
-		repos, _, err := client.Repositories.List(ctx, user, nil)
+		opt := &github.RepositoryListByOrgOptions{Type: "all", ListOptions: github.ListOptions{PerPage: 1000}}
+		repos, _, err := client.Repositories.ListByOrg(ctx, user, opt)
 
 		if err != nil {
 			fmt.Println("Error:", err)
 		} else {
 			fmt.Printf("Open issues for %s\n", user)
 			for _, repo := range repos {
-				issues, _, err := client.Issues.ListByRepo(ctx, user, *repo.Name, nil)
+				fmt.Println(*repo.Name)
+				issueOpt := &github.IssueListByRepoOptions{ListOptions: github.ListOptions{PerPage: 1000}}
+				issues, _, err := client.Issues.ListByRepo(ctx, user, *repo.Name, issueOpt)
 				if err != nil {
 					fmt.Println("Error:", err)
 				} else {
