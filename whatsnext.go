@@ -12,21 +12,25 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Config struct {
+type config struct {
 	Users []string
 	Token string
 }
 
 func printIssue(issue *github.Issue) {
 	if *issue.Number < 10 {
-		fmt.Printf("    [%d]  - %s\n", *issue.Number, *issue.Title)
+		fmt.Printf("    [%d]  - %s - %s\n", *issue.Number, *issue.Title, *issue.URL)
 	} else {
 		fmt.Printf("    [%d] - %s\n", *issue.Number, *issue.Title)
 	}
 }
 
-func ReadConfig(file string) Config {
-	var config Config
+func printPullRequest(pr *github.PullRequest) {
+	fmt.Printf("	Pull request: %s (%s)", *pr.Title, *pr.CommitsURL)
+}
+
+func readConfig(file string) config {
+	var config config
 
 	raw, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -43,7 +47,7 @@ func ReadConfig(file string) Config {
 	return config
 }
 
-func BuildClient(config Config) *github.Client {
+func buildClient(config config) *github.Client {
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: config.Token})
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 	client := github.NewClient(tc)
@@ -51,7 +55,7 @@ func BuildClient(config Config) *github.Client {
 	return client
 }
 
-func ProcessRepositories(config Config, client *github.Client) {
+func processRepositories(config config, client *github.Client) {
 	ctx := context.Background()
 	for _, user := range config.Users {
 		opt := &github.RepositoryListByOrgOptions{Type: "all", ListOptions: github.ListOptions{PerPage: 1000}}
@@ -62,14 +66,26 @@ func ProcessRepositories(config Config, client *github.Client) {
 		} else {
 			fmt.Printf("Open issues for %s\n", user)
 			for _, repo := range repos {
-				fmt.Println(*repo.Name)
+				fmt.Printf("Repo details name: %s:\n", *repo.Name)
+				prOpt := &github.PullRequestListOptions{ListOptions: github.ListOptions{PerPage: 100}}
+				prs, _, err := client.PullRequests.List(ctx, user, *repo.Name, prOpt)
+
+				if err != nil {
+					fmt.Println("Error with PR's:", err)
+				} else {
+					if len(prs) != 0 {
+						for _, pr := range prs {
+							printPullRequest(pr)
+						}
+					}
+				}
+
 				issueOpt := &github.IssueListByRepoOptions{ListOptions: github.ListOptions{PerPage: 1000}}
 				issues, _, err := client.Issues.ListByRepo(ctx, user, *repo.Name, issueOpt)
 				if err != nil {
-					fmt.Println("Error:", err)
+					fmt.Println("Error with Issues:", err)
 				} else {
 					if len(issues) != 0 {
-						fmt.Printf("  %s\n", *repo.Name)
 						for _, issue := range issues {
 							printIssue(issue)
 						}
@@ -83,7 +99,7 @@ func ProcessRepositories(config Config, client *github.Client) {
 func main() {
 	configPtr := flag.String("config", "config.yml", "Path to configuration yaml file")
 	flag.Parse()
-	config := ReadConfig(*configPtr)
-	client := BuildClient(config)
-	ProcessRepositories(config, client)
+	config := readConfig(*configPtr)
+	client := buildClient(config)
+	processRepositories(config, client)
 }
