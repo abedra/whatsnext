@@ -11,28 +11,18 @@ I may have let languish.
 ## Installation
 
 This project is written in go. You will need to have a working go
-environment in order to install it. You will also need the following
-dependencies:
+environment in order to install it. You can build from source using
 
-* `github.com/google/go-github/github`
-* `golang.org/x/oauth2`
-* `gopkg.in/yaml.v2`
-
-If you have the glide dependency manager installed you can run the
-following to install the necessary dependencies.
-
-```
-glide install
+```sh
+go dep ensure
+go build
 ```
 
-If you have a working go environment you can install whatsnext using
-the following command:
+Or via the following command:
 
 ```
 $ go get github.com/abedra/whatsnext
 ```
-
-You can also clone this repository and run the code directly.
 
 ## Setup
 
@@ -42,6 +32,7 @@ work correctly. The following example shows what is necessary:
 ```yaml
 users:
   - abedra
+orgs:
   - repsheet
 token: thisisnotatoken
 ```
@@ -49,7 +40,9 @@ token: thisisnotatoken
 In the users section you can provide any number of users or
 organizations. The program will look for issues in any supplied
 user. The token is for a github access token. Make sure the token you
-generate can access the repositories you would like to examine.
+generate can access the repositories you would like to examine. The
+same rules follow for the orgs section. These are split due to
+differing API calls to get the information.
 
 ## Contributing
 

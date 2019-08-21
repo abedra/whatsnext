@@ -14,6 +14,7 @@ import (
 
 type config struct {
 	Users []string
+	Orgs  []string
 	Token string
 }
 
@@ -26,7 +27,7 @@ func printIssue(issue *github.Issue) {
 }
 
 func printPullRequest(pr *github.PullRequest) {
-	fmt.Printf("	Pull request: %s (%s)", *pr.Title, *pr.CommitsURL)
+	fmt.Printf("    Pull request: %s (%s)", *pr.Title, *pr.CommitsURL)
 }
 
 func readConfig(file string) config {
@@ -55,43 +56,57 @@ func buildClient(config config) *github.Client {
 	return client
 }
 
-func processRepositories(config config, client *github.Client) {
+func processRepositories(client *github.Client, ctx context.Context, entity string, repos []*github.Repository) {
+	fmt.Printf("Open issues for %s\n", entity)
+	for _, repo := range repos {
+		fmt.Printf("Repository: %s\n", *repo.Name)
+		prOpt := &github.PullRequestListOptions{ListOptions: github.ListOptions{PerPage: 100}}
+		prs, _, err := client.PullRequests.List(ctx, entity, *repo.Name, prOpt)
+
+		if err != nil {
+			fmt.Println("Error with PR's:", err)
+		} else {
+			if len(prs) != 0 {
+				for _, pr := range prs {
+					printPullRequest(pr)
+				}
+			}
+		}
+
+		issueOpt := &github.IssueListByRepoOptions{ListOptions: github.ListOptions{PerPage: 1000}}
+		issues, _, err := client.Issues.ListByRepo(ctx, entity, *repo.Name, issueOpt)
+		if err != nil {
+			fmt.Println("Error with Issues:", err)
+		} else {
+			if len(issues) != 0 {
+				for _, issue := range issues {
+					printIssue(issue)
+				}
+			}
+		}
+	}
+}
+
+func processEntities(config config, client *github.Client) {
 	ctx := context.Background()
-	for _, user := range config.Users {
+	for _, org := range config.Orgs {
 		opt := &github.RepositoryListByOrgOptions{Type: "all", ListOptions: github.ListOptions{PerPage: 1000}}
-		repos, _, err := client.Repositories.ListByOrg(ctx, user, opt)
+		repos, _, err := client.Repositories.ListByOrg(ctx, org, opt)
 
 		if err != nil {
 			fmt.Println("Error:", err)
 		} else {
-			fmt.Printf("Open issues for %s\n", user)
-			for _, repo := range repos {
-				fmt.Printf("Repo details name: %s:\n", *repo.Name)
-				prOpt := &github.PullRequestListOptions{ListOptions: github.ListOptions{PerPage: 100}}
-				prs, _, err := client.PullRequests.List(ctx, user, *repo.Name, prOpt)
+			processRepositories(client, ctx, org, repos)
+		}
+	}
 
-				if err != nil {
-					fmt.Println("Error with PR's:", err)
-				} else {
-					if len(prs) != 0 {
-						for _, pr := range prs {
-							printPullRequest(pr)
-						}
-					}
-				}
-
-				issueOpt := &github.IssueListByRepoOptions{ListOptions: github.ListOptions{PerPage: 1000}}
-				issues, _, err := client.Issues.ListByRepo(ctx, user, *repo.Name, issueOpt)
-				if err != nil {
-					fmt.Println("Error with Issues:", err)
-				} else {
-					if len(issues) != 0 {
-						for _, issue := range issues {
-							printIssue(issue)
-						}
-					}
-				}
-			}
+	for _, user := range config.Users {
+		opt := &github.RepositoryListOptions{Type: "all", ListOptions: github.ListOptions{PerPage: 1000}}
+		repos, _, err := client.Repositories.List(ctx, user, opt)
+		if err != nil {
+			fmt.Println("Error:", err)
+		} else {
+			processRepositories(client, ctx, user, repos)
 		}
 	}
 }
@@ -101,5 +116,5 @@ func main() {
 	flag.Parse()
 	config := readConfig(*configPtr)
 	client := buildClient(config)
-	processRepositories(config, client)
+	processEntities(config, client)
 }
