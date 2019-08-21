@@ -13,16 +13,26 @@ import (
 )
 
 type config struct {
-	Users []string
-	Orgs  []string
-	Token string
+	Users     []string
+	Orgs      []string
+	Whitelist []string
+	Token     string
+}
+
+func contains(list []string, s *string) bool {
+	for _, item := range list {
+		if item == *s {
+			return true
+		}
+	}
+	return false
 }
 
 func printIssue(issue *github.Issue) {
 	if *issue.Number < 10 {
 		fmt.Printf("    [%d]  - %s - %s\n", *issue.Number, *issue.Title, *issue.URL)
 	} else {
-		fmt.Printf("    [%d] - %s\n", *issue.Number, *issue.Title)
+		fmt.Printf("    [%d] - %s - %s\n", *issue.Number, *issue.Title, *issue.URL)
 	}
 }
 
@@ -56,9 +66,13 @@ func buildClient(config config) *github.Client {
 	return client
 }
 
-func processRepositories(client *github.Client, ctx context.Context, entity string, repos []*github.Repository) {
+func processRepositories(client *github.Client, ctx context.Context, entity string, repos []*github.Repository, whitelist []string) {
 	fmt.Printf("Open issues for %s\n", entity)
 	for _, repo := range repos {
+		if !contains(whitelist, repo.Name) {
+			continue
+		}
+
 		fmt.Printf("Repository: %s\n", *repo.Name)
 		prOpt := &github.PullRequestListOptions{ListOptions: github.ListOptions{PerPage: 100}}
 		prs, _, err := client.PullRequests.List(ctx, entity, *repo.Name, prOpt)
@@ -96,17 +110,18 @@ func processEntities(config config, client *github.Client) {
 		if err != nil {
 			fmt.Println("Error:", err)
 		} else {
-			processRepositories(client, ctx, org, repos)
+			processRepositories(client, ctx, org, repos, config.Whitelist)
 		}
 	}
 
 	for _, user := range config.Users {
 		opt := &github.RepositoryListOptions{Type: "all", ListOptions: github.ListOptions{PerPage: 1000}}
 		repos, _, err := client.Repositories.List(ctx, user, opt)
+
 		if err != nil {
 			fmt.Println("Error:", err)
 		} else {
-			processRepositories(client, ctx, user, repos)
+			processRepositories(client, ctx, user, repos, config.Whitelist)
 		}
 	}
 }

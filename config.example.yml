@@ -1,4 +1,8 @@
 users:
   - abedra
+orgs:
   - repsheet
+whitelist:
+  - whatsnext
+  - repsheet-nginx
 token: thisisnotatoken
