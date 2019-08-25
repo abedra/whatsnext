@@ -73,6 +73,10 @@ func processRepositories(client *github.Client, ctx context.Context, entity stri
 			continue
 		}
 
+		if *repo.Owner.Login != entity {
+			continue
+		}
+
 		fmt.Printf("Repository: %s\n", *repo.Name)
 		prOpt := &github.PullRequestListOptions{ListOptions: github.ListOptions{PerPage: 100}}
 		prs, _, err := client.PullRequests.List(ctx, entity, *repo.Name, prOpt)
@@ -117,7 +121,6 @@ func processEntities(config config, client *github.Client) {
 	for _, user := range config.Users {
 		opt := &github.RepositoryListOptions{Type: "all", ListOptions: github.ListOptions{PerPage: 1000}}
 		repos, _, err := client.Repositories.List(ctx, user, opt)
-
 		if err != nil {
 			fmt.Println("Error:", err)
 		} else {
