@@ -30,9 +30,9 @@ func contains(list []string, s *string) bool {
 
 func printIssue(issue *github.Issue) {
 	if *issue.Number < 10 {
-		fmt.Printf("    [%d]  - %s - %s\n", *issue.Number, *issue.Title, *issue.URL)
+		fmt.Printf("    [%d]  - %s - %s\n", *issue.Number, *issue.Title, *issue.HTMLURL)
 	} else {
-		fmt.Printf("    [%d] - %s - %s\n", *issue.Number, *issue.Title, *issue.URL)
+		fmt.Printf("    [%d] - %s - %s\n", *issue.Number, *issue.Title, *issue.HTMLURL)
 	}
 }
 
