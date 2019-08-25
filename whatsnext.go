@@ -69,7 +69,7 @@ func buildClient(config config) *github.Client {
 func processRepositories(client *github.Client, ctx context.Context, entity string, repos []*github.Repository, whitelist []string) {
 	fmt.Printf("Open issues for %s\n", entity)
 	for _, repo := range repos {
-		if !contains(whitelist, repo.Name) {
+		if whitelist != nil && !contains(whitelist, repo.Name) {
 			continue
 		}
 
