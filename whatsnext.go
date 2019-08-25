@@ -16,6 +16,7 @@ type config struct {
 	Users     []string
 	Orgs      []string
 	Whitelist []string
+	Blacklist []string
 	Token     string
 }
 
@@ -66,10 +67,14 @@ func buildClient(config config) *github.Client {
 	return client
 }
 
-func processRepositories(client *github.Client, ctx context.Context, entity string, repos []*github.Repository, whitelist []string) {
+func processRepositories(client *github.Client, ctx context.Context, entity string, repos []*github.Repository, config config) {
 	fmt.Printf("Open issues for %s\n", entity)
 	for _, repo := range repos {
-		if whitelist != nil && !contains(whitelist, repo.Name) {
+		if config.Whitelist != nil && !contains(config.Whitelist, repo.Name) {
+			continue
+		}
+
+		if config.Blacklist != nil && contains(config.Blacklist, repo.Name) {
 			continue
 		}
 
@@ -114,7 +119,7 @@ func processEntities(config config, client *github.Client) {
 		if err != nil {
 			fmt.Println("Error:", err)
 		} else {
-			processRepositories(client, ctx, org, repos, config.Whitelist)
+			processRepositories(client, ctx, org, repos, config)
 		}
 	}
 
@@ -124,7 +129,7 @@ func processEntities(config config, client *github.Client) {
 		if err != nil {
 			fmt.Println("Error:", err)
 		} else {
-			processRepositories(client, ctx, user, repos, config.Whitelist)
+			processRepositories(client, ctx, user, repos, config)
 		}
 	}
 }
