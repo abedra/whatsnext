@@ -7,4 +7,5 @@ whitelist:
   - repsheet-nginx
 blacklist:
   - getrepsheet.com
+url: https://git.myorg.com/api/v3
 token: thisisnotatoken
