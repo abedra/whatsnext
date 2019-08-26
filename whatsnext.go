@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -44,8 +45,6 @@ func printPullRequest(pr *github.PullRequest) {
 	} else {
 		fmt.Printf("    P[%d] - %s - %s\n", *pr.Number, *pr.Title, *pr.HTMLURL)
 	}
-
-//	fmt.Printf("    [%d]: %s (%s)\n", *pr.Title, *pr.CommitsURL)
 }
 
 func readConfig(file string) config {
@@ -150,8 +149,18 @@ func processEntities(config config, client *github.Client) {
 	}
 }
 
+func defaultConfigFile() string {
+	usr, err := user.Current()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	return usr.HomeDir + "/.whatsnext/config.yml"
+}
+
 func main() {
-	configPtr := flag.String("config", "config.yml", "Path to configuration yaml file")
+	configPtr := flag.String("config", defaultConfigFile(), "Path to configuration yaml file")
 	flag.Parse()
 	config := readConfig(*configPtr)
 	client := buildClient(config)
