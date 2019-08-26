@@ -32,14 +32,20 @@ func contains(list []string, s *string) bool {
 
 func printIssue(issue *github.Issue) {
 	if *issue.Number < 10 {
-		fmt.Printf("    [%d]  - %s - %s\n", *issue.Number, *issue.Title, *issue.HTMLURL)
+		fmt.Printf("    I[%d]  - %s - %s\n", *issue.Number, *issue.Title, *issue.HTMLURL)
 	} else {
-		fmt.Printf("    [%d] - %s - %s\n", *issue.Number, *issue.Title, *issue.HTMLURL)
+		fmt.Printf("    I[%d] - %s - %s\n", *issue.Number, *issue.Title, *issue.HTMLURL)
 	}
 }
 
 func printPullRequest(pr *github.PullRequest) {
-	fmt.Printf("    Pull request: %s (%s)", *pr.Title, *pr.CommitsURL)
+	if *pr.Number < 10 {
+		fmt.Printf("    P[%d]  - %s - %s\n", *pr.Number, *pr.Title, *pr.HTMLURL)
+	} else {
+		fmt.Printf("    P[%d] - %s - %s\n", *pr.Number, *pr.Title, *pr.HTMLURL)
+	}
+
+//	fmt.Printf("    [%d]: %s (%s)\n", *pr.Title, *pr.CommitsURL)
 }
 
 func readConfig(file string) config {
