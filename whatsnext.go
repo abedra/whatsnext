@@ -17,6 +17,7 @@ type config struct {
 	Orgs      []string
 	Whitelist []string
 	Blacklist []string
+	Url       string
 	Token     string
 }
 
@@ -62,9 +63,18 @@ func readConfig(file string) config {
 func buildClient(config config) *github.Client {
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: config.Token})
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
-	client := github.NewClient(tc)
 
-	return client
+	if config.Url == "" {
+		client := github.NewClient(tc)
+		return client
+	} else {
+		client, err := github.NewEnterpriseClient(config.Url, config.Url, tc)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		return client
+	}
 }
 
 func processRepositories(client *github.Client, ctx context.Context, entity string, repos []*github.Repository, config config) {
