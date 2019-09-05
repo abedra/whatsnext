@@ -14,12 +14,13 @@ import (
 )
 
 type config struct {
-	Users     []string
-	Orgs      []string
-	Whitelist []string
-	Blacklist []string
-	Url       string
-	Token     string
+	Users              []string
+	Orgs               []string
+	Whitelist          []string
+	Blacklist          []string
+	ConstrainAssignees []string `yaml:"constrain_assignees"`
+	Url                string
+	Token              string
 }
 
 func contains(list []string, s *string) bool {
@@ -118,7 +119,9 @@ func processRepositories(client *github.Client, ctx context.Context, entity stri
 		} else {
 			if len(issues) != 0 {
 				for _, issue := range issues {
-					printIssue(issue)
+					if issue.Assignee != nil && contains(config.ConstrainAssignees, issue.Assignee.Login) {
+						printIssue(issue)
+					}
 				}
 			}
 		}

@@ -7,5 +7,7 @@ whitelist:
   - repsheet-nginx
 blacklist:
   - getrepsheet.com
+constrain_assignees:
+  - abedra
 url: https://git.myorg.com/api/v3
 token: thisisnotatoken
