@@ -32,6 +32,15 @@ func contains(list []string, s *string) bool {
 	return false
 }
 
+func usersContains(a []*github.User, b []string) bool {
+	for _, item := range a {
+		if contains(b, item.Login) {
+			return true
+		}
+	}
+	return false
+}
+
 func printIssue(issue *github.Issue) {
 	if issue.IsPullRequest() {
 		return
@@ -107,7 +116,9 @@ func processRepositories(client *github.Client, ctx context.Context, entity stri
 		} else {
 			if len(prs) != 0 {
 				for _, pr := range prs {
-					printPullRequest(pr)
+					if pr.Assignees != nil && pr.User != nil && contains(config.ConstrainAssignees, pr.User.Login) || usersContains(pr.RequestedReviewers, config.ConstrainAssignees) {
+						printPullRequest(pr)
+					}
 				}
 			}
 		}
