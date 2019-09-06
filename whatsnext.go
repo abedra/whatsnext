@@ -130,7 +130,7 @@ func processRepositories(client *github.Client, ctx context.Context, entity stri
 		} else {
 			if len(issues) != 0 {
 				for _, issue := range issues {
-					if issue.Assignee != nil && contains(config.ConstrainAssignees, issue.Assignee.Login) {
+					if issue.Assignees != nil && usersContains(issue.Assignees, config.ConstrainAssignees) {
 						printIssue(issue)
 					}
 				}
