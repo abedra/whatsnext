@@ -92,6 +92,37 @@ func buildClient(config config) *github.Client {
 	}
 }
 
+func shouldPrintIssue(issue *github.Issue, config config) bool {
+	if len(config.ConstrainAssignees) == 0 {
+		return true
+	}
+
+	if len(config.ConstrainAssignees) > 0 &&
+		issue.Assignees != nil &&
+		usersContains(issue.Assignees, config.ConstrainAssignees) {
+
+		return true
+	}
+
+	return false
+}
+
+func shouldPrintPr(pr *github.PullRequest, config config) bool {
+	if len(config.ConstrainAssignees) == 0 {
+		return true
+	}
+
+	if len(config.ConstrainAssignees) > 0 &&
+		pr.Assignees != nil &&
+		pr.User != nil &&
+		contains(config.ConstrainAssignees, pr.User.Login) ||
+		usersContains(pr.RequestedReviewers, config.ConstrainAssignees) {
+		return true
+	}
+
+	return false
+}
+
 func processRepositories(client *github.Client, ctx context.Context, entity string, repos []*github.Repository, config config) {
 	fmt.Printf("Open issues for %s\n", entity)
 	for _, repo := range repos {
@@ -116,7 +147,7 @@ func processRepositories(client *github.Client, ctx context.Context, entity stri
 		} else {
 			if len(prs) != 0 {
 				for _, pr := range prs {
-					if pr.Assignees != nil && pr.User != nil && contains(config.ConstrainAssignees, pr.User.Login) || usersContains(pr.RequestedReviewers, config.ConstrainAssignees) {
+					if shouldPrintPr(pr, config) {
 						printPullRequest(pr)
 					}
 				}
@@ -130,7 +161,7 @@ func processRepositories(client *github.Client, ctx context.Context, entity stri
 		} else {
 			if len(issues) != 0 {
 				for _, issue := range issues {
-					if issue.Assignees != nil && usersContains(issue.Assignees, config.ConstrainAssignees) {
+					if shouldPrintIssue(issue, config) {
 						printIssue(issue)
 					}
 				}
